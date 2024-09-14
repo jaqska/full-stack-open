@@ -7,5 +7,6 @@ sequenceDiagram
     activate server
     server-->>browser: {"message":"note created"}
     deactivate server
-  
+
+    Note right of browser: The browser sends a POST request to the server, which responds with a message that the note is created
 ```

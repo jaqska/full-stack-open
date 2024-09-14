@@ -22,6 +22,8 @@ sequenceDiagram
 
   browser-->>server: GET https://studies.cs.helsinki.fi/exampleapp/data.json
     activate server
-    server-->>browser: data.json
+    server-->>browser: [{"content": "AMLO","date": "2024-09-14T05:16:03.626Z"},...]
     deactivate server
+
+  Note right of browser: The browser renders the data in data.json using the callback function in main.js 
 ```
