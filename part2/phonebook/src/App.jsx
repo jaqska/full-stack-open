@@ -6,24 +6,21 @@ import axios from 'axios'
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
-  const [newName, setNewName] = useState('')
-  const [allNames, setAllNames] = useState(['Arto Hellas'])
   const [newNumber, setNewNumber] = useState('')
-  const [allNumbers, setAllNumbers] = useState(['040-123456'])
+  const [newName, setNewName] = useState('')
+  const [searchName, setSearchName] = useState('')
 
-  const [newFilterName, setNewFilterName] = useState('')
-  
   useEffect(() => {
     axios
       .get('http://localhost:3001/persons')
       .then(response => {
         setPersons(response.data)
+        console.log('Promise fulfilled')
       })
-  })
-  
+  }, [])
 
   const handleFilterInput = (event) => {
-    setNewFilterName(event.target.value)
+    setSearchName(event.target.value)
   }
 
   const handleContactChange = (event) => {
@@ -36,44 +33,57 @@ const App = () => {
 
   const addContact = (event) => {
     event.preventDefault()
-    if (allNames.includes(newName)) {
+    const nameExists = persons.some(person => person.name === newName)
+    const numberExists = persons.some(person => person.number === newNumber)
+  
+    if (nameExists) {
       alert(`${newName} is already added to phonebook`)
-    } if (allNumbers.includes(newNumber)) {
-      alert(`${newNumber} is already added to phonebook`) }
-    else {
-    const newContactObject = {
-      name: newName,
-      number: newNumber}
-    setPersons(persons.concat(newContactObject))
-    setAllNames(allNames.concat(newName))
-    setAllNumbers(allNumbers.concat(setNewNumber))
-    setNewName('')
-    setNewNumber('')
+    } else if (numberExists) {
+      alert(`${newNumber} is already added to phonebook`)
+    } else {
+      const newContactObject = {
+        name: newName,
+        number: newNumber
+      }
+  
+      const updatedPersons = persons.concat(newContactObject)
+      setPersons(updatedPersons)
+      
+      
+      setNewName('')
+      setNewNumber('')
+  
+      setSearchName('') 
     }
   }
-  const filteredPersons = newFilterName === '' ? persons : persons.filter(person => 
-    person.name.toLowerCase().includes(newFilterName.toLowerCase())
+  
+  const filteredPersons = persons.filter(person => 
+    person.name.toLowerCase().includes(searchName.toLowerCase())
   )
+
 
   return (
     <div>
       <h2>Phonebook</h2>
-        <Filter 
-        value={newFilterName}
+      <Filter 
+        value={searchName}
         onChange={handleFilterInput}
-        />  
+      />  
+      
       <h2>add a new</h2>
-        <PersonForm 
-        onSubmit={addContact}
+      <PersonForm 
+        onSubmit={addContact} 
         newName={newName}
         newNumber={newNumber}
         handleContactChange={handleContactChange}
         handleNumberChange={handleNumberChange}
-        />
+      />
+
       <h2>Numbers</h2>
-        <Persons filteredPersons={filteredPersons}/>
+      <Persons 
+        filteredPersons={filteredPersons} 
+      />
     </div>
-    
   )
 }
 
