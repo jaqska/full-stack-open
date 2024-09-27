@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
-import axios from 'axios'
+import contacts from './services/contacts'
+
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
@@ -10,12 +11,14 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [searchName, setSearchName] = useState('')
 
-  useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        setPersons(response.data)
+  useEffect(() => { 
+    contacts.getAll()
+      .then(initialContacts => {
+        setPersons(initialContacts)
         console.log('Promise fulfilled')
+      })
+      .catch(error => {
+        console.error(error,'Failed to retrieve contacts from database')
       })
   }, [])
 
@@ -30,7 +33,15 @@ const App = () => {
   const handleNumberChange = (event) => {
     setNewNumber(event.target.value)
   }
-
+  
+  const deleteContact = (id) => {
+    contacts.deleteContact(id).then(() => {
+      setPersons(persons.filter(person => person.id !== id))
+      console.log('Contact deleted')
+    }).catch(error => {
+      console.error(error, 'Failed to delete contact')
+    })
+  }
   const addContact = (event) => {
     event.preventDefault()
     const nameExists = persons.some(person => person.name === newName)
@@ -50,12 +61,14 @@ const App = () => {
         number: newNumber
       }
       
-      axios.post('http://localhost:3001/persons', newContactObject).then(res => {
-        console.log(res)
+      contacts.create(newContactObject).then(returnedContact => {
+        console.log(`${returnedContact.name} successfully added to database`)
         const updatedPersons = persons.concat(newContactObject)
         setPersons(updatedPersons)
         setNewName('')
         setNewNumber('')
+      }).catch(error => {
+        console.error(error,'Failed to create new contact')
       })
   
       setSearchName('') 
@@ -86,7 +99,8 @@ const App = () => {
 
       <h2>Numbers</h2>
       <Persons 
-        filteredPersons={filteredPersons} 
+        filteredPersons={filteredPersons}
+        deleteContact={deleteContact}
       />
     </div>
   )
