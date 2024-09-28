@@ -35,26 +35,48 @@ const App = () => {
   }
   
   const deleteContact = (id) => {
-    contacts.deleteContact(id).then(() => {
-      setPersons(persons.filter(person => person.id !== id))
-      console.log('Contact deleted')
-    }).catch(error => {
-      console.error(error, 'Failed to delete contact')
-    })
+    let answer = window.confirm('Are you sure you want to delete this contact?')
+    if (answer) {
+      contacts.deleteContact(id).then(() => {
+        setPersons(persons.filter(person => person.id !== id))
+        console.log('Contact deleted')
+      }).catch(error => {
+        console.error(error, 'Failed to delete contact')
+      })
+    } else {
+      return
+    }
+    
   }
   const addContact = (event) => {
     event.preventDefault()
     const nameExists = persons.some(person => person.name === newName)
     const numberExists = persons.some(person => person.number === newNumber)
+    const nameId = persons.find(person => person.name === newName).id
   
     if (nameExists) {
-      alert(`${newName} is already added to phonebook`)
-      setNewName('')
-      return
-    } else if (numberExists) {
-      alert(`${newNumber} is already added to phonebook`)
-      setNewNumber('')
-      return
+      let answer = window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)
+      if (answer) {
+        const newContactObject = {
+            name: newName,
+            number: newNumber
+          }
+        contacts.update(nameId, newContactObject)
+        .then((returnedContact) => {
+          setPersons(persons.map(person => 
+            person.id !== nameId ? person : returnedContact
+          ))
+          console.log('Contact updated')
+        })
+        .catch(error => {
+          console.error(error, 'Failed to update contact')})
+        setNewName('')
+        setNewNumber('')
+      } else {
+        setNewName('')
+        setNewNumber('')
+      }
+      
     } else {
       const newContactObject = {
         name: newName,
