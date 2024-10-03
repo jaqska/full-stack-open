@@ -11,14 +11,15 @@ function App() {
     axios
       .get('https://studies.cs.helsinki.fi/restcountries/api/all')
       .then(response => {
-        console.log(response.data)
         setCountries(response.data)
-        console.log('Countries successfully retrieved from database...', response.data)
+        console.log('Countries successfully retrieved from database...')
       })
       .catch(error => {
         console.log('Error fetching all countries:', error)
       })
   }, [])
+
+
 
   const handleChange = (event) => {
     const searchName = event.target.value
