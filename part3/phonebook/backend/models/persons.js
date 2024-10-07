@@ -1,4 +1,4 @@
-require("dotenv").config()
+require('dotenv').config()
 const mongoose = require('mongoose')
 
 
@@ -11,7 +11,7 @@ const url = process.env.MONGODB_URI
 console.log('connecting to', url)
 
 mongoose.connect(url)
-  .then(result => {
+  .then(() => {
     console.log('connected to MongoDB')
   })
   .catch(error => {
@@ -28,13 +28,12 @@ const personSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator: function(v) {
-        return /\d{2,3}-\d+/.test(v);
+        return /\d{2,3}-\d+/.test(v)
       },
       message: props => `${props.value} is not a valid phone number! The first part must have two or three numbers and the second part must also consists of numbers. The two parts must be separated by a string (-) (e.g. 040-3949521)`
     },
     required: [true, 'User phone number required'],
     minLength: 8,
-    required: true
   }
 })
 
