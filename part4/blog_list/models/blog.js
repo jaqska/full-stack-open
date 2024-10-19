@@ -17,7 +17,12 @@ const blogSchema = new mongoose.Schema({
     type: Number,
     required: false,
     default: 0
-  }
+  },
+  user: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }]
 })
 
 blogSchema.set('toJSON', {
@@ -27,5 +32,7 @@ blogSchema.set('toJSON', {
     delete returnedObject.__v
   }
 })
+
+
 
 module.exports = mongoose.model('Blog', blogSchema)
