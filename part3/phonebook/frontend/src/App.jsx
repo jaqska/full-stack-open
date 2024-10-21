@@ -137,7 +137,7 @@ const App = () => {
       }).catch(error => {
         console.error(error,'Failed to add new contact')
         setStatusMessage(
-          `Error: Failed to add ${returnedContact.name}`
+          `Error: ${error.response.data.error}`
         )
         setTimeout(() => {
           setStatusMessage(null)
