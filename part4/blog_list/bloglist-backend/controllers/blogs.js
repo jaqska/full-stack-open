@@ -1,7 +1,5 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
-const User = require('../models/user')
-const jwt = require('jsonwebtoken')
 
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 })
@@ -16,17 +14,11 @@ blogsRouter.get('/:id', async (request, response) => {
 
 blogsRouter.post('/', async (request, response) => {
 
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: 'token invalid' })
-  }
-
   const body = request.body
   if (!body.title || !body.url) {
     return response.status(400).json({ error: 'Title or URL is missing' })
   }
   const user = request.user
-  // const user = await User.findById(decodedToken.id)
 
   if (!user) {
     return response.status(404).json({ error: 'User not found' })
@@ -48,46 +40,48 @@ blogsRouter.post('/', async (request, response) => {
 })
 
 blogsRouter.delete('/:id', async (request, response) => {
-  // const decodedToken = jwt.verify(request.token, process.env.SECRET)
-  // if (!decodedToken.id) {
-  //   return response.status(401).json({ error: 'token invalid' })
-  // }
+
+  const id = request.params.id
   const user = request.user
-  if (!user) {
-    return response.status(401).json({ error: 'authentication required' })
-  }
-  const blog = await Blog.findById(request.params.id)
+
+  const blog = await Blog.findById(id)
   if (!blog) {
     return response.status(404).json({ error: 'blog not found' })
   }
-  if (blog.user.toString() !== user._id.toString()) {
-    return response.status(403).json({ error: 'forbidden: you can only delete your own blogs' })
+
+  if (!user || blog.user.toString() !== user._id.toString()) {
+    return response.status(403).json({ error: 'you are not authorized to delete this blog' })
   }
-  const id = request.params.id
+
   await Blog.findByIdAndDelete(id)
   response.status(204).end()
 })
 
 blogsRouter.put('/:id', async (request, response) => {
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: 'token invalid' })
-  }
   const body = request.body
   const id = request.params.id
+  const user = request.user
 
-  const user = await User.findById(body.userId)
+  const blog = await Blog.findById(id)
+  if (!blog) {
+    return response.status(404).json({ error: 'blog not found' })
+  }
+
+  if (!user || blog.user.toString() !== user._id.toString()) {
+    return response.status(403).json({ error: 'you are not authorized to update this blog' })
+  }
 
   const blogPost = {
-    title: body.title,
-    author: body.author,
-    url: body.url,
-    likes: body.likes || 0,
+    title: body.title || blog.title,
+    author: body.author || blog.author,
+    url: body.url || blog.url,
+    likes: body.likes !== undefined ? Number(body.likes) : blog.likes,
     user: user._id
   }
+
   const updatedBlog = await Blog.findByIdAndUpdate(id, blogPost, { new: true })
 
-  response.status(201).json(updatedBlog)
+  response.status(200).json(updatedBlog)
 })
 
 module.exports = blogsRouter

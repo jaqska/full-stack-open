@@ -23,7 +23,6 @@ describe('testing API endpoints', () => {
       blog.user = testUser._id
     })
     await Blog.insertMany(helper.initialBlogPosts)
-
   })
 
   describe('GET /api/blogs', () => {
@@ -79,8 +78,14 @@ describe('testing API endpoints', () => {
       const testUser = usersAtStart[0]
       helper.newValidBlogPost.user = testUser.id
 
+      const loginResponse = await api
+        .post('/api/login')
+        .send({ username: 'testuser', password: 'testpassword', name: 'test user' })
+      const token = loginResponse.body.token
+
       await api
         .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
         .send(helper.newValidBlogPost)
         .expect(201)
         .expect('Content-Type', /application\/json/)
@@ -95,9 +100,13 @@ describe('testing API endpoints', () => {
     })
 
     test('likes default to 0 if missing in the post', async () => {
-
+      const loginResponse = await api
+        .post('/api/login')
+        .send({ username: 'testuser', password: 'testpassword', name: 'test user' })
+      const token = loginResponse.body.token
       await api
         .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
         .send(helper.blogMissingLikes)
         .expect(201)
         .expect('Content-Type', /application\/json/)
@@ -109,8 +118,14 @@ describe('testing API endpoints', () => {
     })
 
     test('post missing title will return 400 bad request', async () => {
+      const loginResponse = await api
+        .post('/api/login')
+        .send({ username: 'testuser', password: 'testpassword', name: 'test user' })
+      const token = loginResponse.body.token
+
       const response = await api
         .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
         .send(helper.blogMissingTitle)
         .expect(400)
         .expect('Content-Type', /application\/json/)
@@ -118,9 +133,14 @@ describe('testing API endpoints', () => {
       assert.strictEqual(response.status, 400)})
 
     test('post missing url will return 400 bad request', async () => {
+      const loginResponse = await api
+        .post('/api/login')
+        .send({ username: 'testuser', password: 'testpassword', name: 'test user' })
+      const token = loginResponse.body.token
 
       const response = await api
         .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
         .send(helper.blogMissingUrl)
         .expect(400)
         .expect('Content-Type', /application\/json/)
@@ -131,11 +151,17 @@ describe('testing API endpoints', () => {
   describe('DELETE /api/blogs/:id', () => {
 
     test('valid post can be deleted', async () => {
-
       const blogsAtStart = await helper.blogsInDb()
       const blogToDelete = blogsAtStart[0]
+
+      const loginResponse = await api
+        .post('/api/login')
+        .send({ username: 'testuser', password: 'testpassword', name: 'test user' })
+      const token = loginResponse.body.token
+
       await api
         .delete(`/api/blogs/${blogToDelete.id}`)
+        .set('Authorization', `Bearer ${token}`)
         .expect(204)
 
       const blogsAfterDelete = await helper.blogsInDb()
@@ -152,10 +178,17 @@ describe('testing API endpoints', () => {
 
       const blogsAtStart = await helper.blogsInDb()
       const blogToUpdate = blogsAtStart[1]
+
+      const loginResponse = await api
+        .post('/api/login')
+        .send({ username: 'testuser', password: 'testpassword', name: 'test user' })
+      const token = loginResponse.body.token
+
       const response = await api
         .put(`/api/blogs/${blogToUpdate.id}`)
         .send(helper.updatedBlogPost)
-        .expect(201)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200)
         .expect('Content-Type', /application\/json/)
 
       assert.strictEqual(response.body.title, helper.updatedBlogPost.title)
