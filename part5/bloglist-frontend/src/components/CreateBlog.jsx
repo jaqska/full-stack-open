@@ -1,24 +1,17 @@
 import { useState } from 'react'
 
-const BlogForm = ({ createBlog, showNotification }) => {
-
+const CreateBlog = ({ addBlog }) => {
   const [newTitle, setNewTitle] = useState('')
   const [newAuthor, setNewAuthor] = useState('')
   const [newUrl, setNewUrl] = useState('')
 
-  const addBlog = async (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault()
-
-    if (!newTitle || !newAuthor || !newUrl) {
-      return showNotification('title, author or url is missing', 'error')
-    }
-
-    createBlog({
+    addBlog({
       title: newTitle,
       author: newAuthor,
-      url: newUrl
+      url: newUrl,
     })
-
     setNewTitle('')
     setNewAuthor('')
     setNewUrl('')
@@ -27,14 +20,13 @@ const BlogForm = ({ createBlog, showNotification }) => {
   return (
     <div>
       <h3>Create new blog</h3>
-
-      <form onSubmit={addBlog}>
+      <form onSubmit={handleSubmit}>
         <div>
           title:
           <input
             type="text"
             value={newTitle}
-            onChange={event => setNewTitle(event.target.value)}
+            onChange={({ target }) => setNewTitle(target.value)}
           />
         </div>
         <div>
@@ -42,7 +34,7 @@ const BlogForm = ({ createBlog, showNotification }) => {
           <input
             type="text"
             value={newAuthor}
-            onChange={event => setNewAuthor(event.target.value)}
+            onChange={({ target }) => setNewAuthor(target.value)}
           />
         </div>
         <div>
@@ -50,13 +42,13 @@ const BlogForm = ({ createBlog, showNotification }) => {
           <input
             type="text"
             value={newUrl}
-            onChange={event => setNewUrl(event.target.value)}
+            onChange={({ target }) => setNewUrl(target.value)}
           />
         </div>
-        <button type="submit">submit</button>
+        <button type="submit">create</button>
       </form>
     </div>
   )
 }
 
-export default BlogForm
+export default CreateBlog

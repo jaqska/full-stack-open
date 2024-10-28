@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import Notification from './components/Notification'
 import BlogForm from './components/BlogForm'
@@ -10,7 +10,7 @@ import loginService from './services/login'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
-  const [username, setUsername] = useState('') 
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
   const [notificationMessage, setNotificationMessage] = useState(null)
@@ -18,6 +18,7 @@ const App = () => {
   const [loginVisible, setLoginVisible] = useState(null)
   const [showAll, setShowAll] = useState(true)
 
+  const blogFormRef = useRef()
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
@@ -31,26 +32,13 @@ const App = () => {
   useEffect(() => {
     blogService.getAll().then(blogs =>
       setBlogs( blogs )
-    )  
+    )
   }, [blogs])
 
   const showNotification = (message, type) => {
     setNotificationMessage(message)
     setNotificationType(type)
     setTimeout(() => setNotificationMessage(null), 5000)
-  }
-
-  
-  const handleTitleChange = (event) => {
-    setNewTitle(event.target.value)
-  }
-
-  const handleAuthorChange = (event) => {
-    setNewAuthor(event.target.value)
-  }
-
-  const handleUrlChange = (event) => {
-    setNewUrl(event.target.value)
   }
 
   const handleLogin = async (event) => {
@@ -62,7 +50,7 @@ const App = () => {
       })
       window.localStorage.setItem(
         'loggedBlogappUser', JSON.stringify(user)
-      ) 
+      )
       blogService.setToken(user.token)
       setUser(user)
       setUsername(user.username)
@@ -76,10 +64,15 @@ const App = () => {
   }
 
   const blogsToShow = showAll ? blogs : blogs.filter(blog => blog.user?.username === username)
+  const sortedBlogsToShow = blogsToShow.sort((blogA, blogB) => blogB.likes - blogA.likes)
+
+  const handleDeleteBlog = (id) => {
+    setBlogs(blogs.filter(blog => blog.id !== id))
+  }
 
   const loginForm = () => {
-    const hideWhenVisible = {display: loginVisible ? 'none': ''}
-    const showWhenVisible = {display: loginVisible ? '' : 'none'}
+    const hideWhenVisible = { display: loginVisible ? 'none': '' }
+    const showWhenVisible = { display: loginVisible ? '' : 'none' }
 
     return (
       <div>
@@ -109,11 +102,12 @@ const App = () => {
 
   const addBlog = async (blogObject) => {
     try {
+      blogFormRef.current.toggleVisibility()
       const returnedBlog = await blogService.create(blogObject)
       setBlogs(blogs.concat(returnedBlog))
       showNotification(`${returnedBlog.title} by ${returnedBlog.author} is added`, 'success')
-    } catch (error) { 
-        showNotification(`${error.message}`, 'error')
+    } catch (error) {
+      showNotification(`${error.message}`, 'error')
     }
   }
 
@@ -123,31 +117,34 @@ const App = () => {
       <Notification message={notificationMessage} type={notificationType} />
       {!user && loginForm()}
       {user && <div>
-        <p>{user.name} logged in</p>
+        <p>{user.username} logged in</p>
         <button onClick={handleLogout}>log out</button>
 
-        <Togglable buttonLabel="new blog post">
+        <Togglable buttonLabel="new blog post" ref={blogFormRef}>
           <BlogForm
             createBlog={addBlog}
+            showNotification={showNotification}
           />
         </Togglable>
-        </div>
+      </div>
       }
 
       <div>
         <button onClick={() => setShowAll(!showAll)}>
           show {showAll ? 'your own blog post' : 'all' }
         </button>
-        </div>      
-        <ul>
-          {blogsToShow.map(blog => 
-            <Blog
-              key={blog.id}
-              blog={blog}
-            />
-          )}
-        </ul>
       </div>
+      <ul>
+        {sortedBlogsToShow.map(blog =>
+          <Blog
+            key={blog.id}
+            blog={blog}
+            handleDeleteBlog={handleDeleteBlog}
+            user={user}
+          />
+        )}
+      </ul>
+    </div>
   )
 }
 
